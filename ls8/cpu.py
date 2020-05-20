@@ -2,12 +2,20 @@
 
 import sys
 
+'''
 # `HLT` instruction handler
 HLT = 1
 # `LDI` instruction handler
 LDI = 130
 # `PRN` instruction handler
 PRN = 71
+'''
+
+HLT = 0b00000001
+PRN = 0b01000111
+LDI = 0b10000010
+ADD = 0b10100000
+MUL = 0b10100010
 
 class CPU:
     """Main CPU class."""
@@ -23,22 +31,29 @@ class CPU:
 
         address = 0
 
-        # For now, we've just hardcoded a program:
+        try:
+            filename = sys.argv[1]
+            address = 0
+            with open(filename) as f:
+                # read the comments in line by line
+                for line in f:
+                    # remove any comment
+                    line = line.split("#")[0]
+                    # remove the white space
+                    line = line.strip()
+                    # skip over the empty lines
+                    if line == "":
+                        continue
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+                    value = int(line, 2)
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+                    # set the instruction to the mem
+                    self.ram[address] = value
+                    address += 1
 
+        except FileNotFoundError:
+            print("File not found")
+            sys.exit(2)
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -46,6 +61,8 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -90,15 +107,22 @@ class CPU:
             if IR == HLT:
                 # In `run()` in your switch, exit the loop if a `HLT` instruction is encountered regardless of whether or not there are more lines of code in the LS-8 program you loaded
                 print("Exit")
+                sys.exit(-1)
                 break
             elif IR == PRN:
                 # Add the `PRN` instruction
-                data = self.ram[self.pc + 1]
+                data = operand_a
                 print(self.reg[data])
                 self.pc += 2
             elif IR == LDI:
                 # Add the `LDI` instruction
                 self.reg[operand_a] = operand_b
+                self.pc += 3
+            elif IR == ADD:
+                self.alu("ADD", operand_a, operand_b)
+                self.pc += 3
+            elif IR == MUL:
+                self.alu("MUL", operand_a, operand_b)
                 self.pc += 3
             else:
                 print("Error")
