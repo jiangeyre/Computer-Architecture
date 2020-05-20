@@ -1,0 +1,14 @@
+1  # PRINT_BEEJ
+3  # SAVE_REG R0, 60
+0 
+60
+3  # SAVE_REG R1, 12
+1
+12
+5  # ADD R0, R1
+0
+1
+4  # PRINT_REG R0
+0
+1  # PRINT_BEEJ
+2  # HALT
