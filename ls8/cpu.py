@@ -11,11 +11,15 @@ LDI = 130
 PRN = 71
 '''
 
+SP = 7
+
 HLT = 0b00000001
 PRN = 0b01000111
 LDI = 0b10000010
 ADD = 0b10100000
 MUL = 0b10100010
+PUSH = 0b01000101
+POP = 0b01000110
 
 class CPU:
     """Main CPU class."""
@@ -25,6 +29,7 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.reg[SP] = 0XF4
 
     def load(self):
         """Load a program into memory."""
@@ -63,6 +68,27 @@ class CPU:
         # elif op == "SUB": etc
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        if op == 'OR':
+            if reg_a == 1 and reg_b == 0:
+                return True
+            elif reg_a == 0 and reg_b == 1:
+                return True
+            elif reg_a == 1 and reg_b == 1:
+                return True
+            else:
+                return False
+        if op == 'XOR':
+            if reg_a == 1 and reg_b == 0:
+                return True
+            if reg_a == 0 and reg_b == 1:
+                return True
+            else:
+                return False
+        if op == 'NOR':
+            if reg_a == 0 and reg_b == 0:
+                return True
+            else:
+                return False
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -124,5 +150,27 @@ class CPU:
             elif IR == MUL:
                 self.alu("MUL", operand_a, operand_b)
                 self.pc += 3
+            elif IR == PUSH:
+                # choose register
+                reg = self.ram[self.pc+1]
+                # get value from register
+                val = self.reg[reg]
+                # decrement memory address by one
+                self.reg[SP] -= 1
+                # vave value from register into memory
+                self.ram[self.reg[SP]] = val
+                # increment pc by 2
+                self.pc += 2
+            elif IR == POP:
+                # reg holding sp
+                reg = self.ram[self.pc+1]
+                # value from place in memory
+                val = self.ram[self.reg[SP]]
+                # save value into register we arelooking at
+                self.reg[reg] = val
+                # increment pointer
+                self.reg[SP] += 1
+                # increment pc by 2
+                self.pc += 2
             else:
                 print("Error")
